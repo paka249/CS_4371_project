@@ -1,0 +1,55 @@
+[33mcommit 88328cb8dab060dbeec17ab307109aa6cd43cdee[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: usn3 <usn3@txstate.edu>
+Date:   Thu Oct 30 18:40:22 2025 -0500
+
+    Revert "updated NET to version 8"
+    
+    This reverts commit 28ff47d46626a97daddc35e2db1a08a421ca7e3d.
+
+[33mcommit 28ff47d46626a97daddc35e2db1a08a421ca7e3d[m
+Author: usn3 <usn3@txstate.edu>
+Date:   Thu Oct 30 17:35:20 2025 -0500
+
+    updated NET to version 8
+
+[33mcommit 3445314ec3192870da27be8cb912357f2f2cc8ef[m
+Author: Waleed A. Yousef (Waleed Yousef) <Wyousef@fcih.net>
+Date:   Fri Nov 12 17:00:58 2021 -0800
+
+    Create LICENSE
+
+[33mcommit 5b59366d0ff62614795d6a53f709aa4ddc9a332a[m
+Author: wyousef <wyousef@fcih.net>
+Date:   Thu Mar 25 11:55:39 2021 -0700
+
+    Adding issue template
+
+[33mcommit 6f7eaef28861b389b86e2a8b85bcf97c06be5a07[m
+Author: wyousef <wyousef@fcih.net>
+Date:   Wed Mar 24 16:09:11 2021 -0700
+
+    Updating citation information
+
+[33mcommit 2147f7cd142d172087a838a7cf9a559551948830[m
+Author: wyousef <wyousef@fcih.net>
+Date:   Fri Feb 12 12:17:08 2021 -0800
+
+    Updating the https domain
+
+[33mcommit 9a8b646fcac57774c3fafac0f1fe60698ae51819[m
+Author: unknown <briguglw@uwindsor.ca>
+Date:   Fri Feb 12 11:53:52 2021 -0800
+
+    adding code for HTTPS, (Mostly handled by Proxy Server)
+
+[33mcommit b28a556bd7dfb94d549bbf17a2e542f31fa5c0ae[m
+Author: wyousef <wyousef@fcih.net>
+Date:   Thu Feb 11 10:43:39 2021 -0800
+
+    First publish of repo and portal service
+
+[33mcommit 32bcecabfbd3f94a833230152af378e867cb54a0[m
+Author: wyousef <wyousef@fcih.net>
+Date:   Tue Dec 29 11:14:39 2020 -0800
+
+    Initializing
