@@ -4,8 +4,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <IntermediateOutputPath>obj\Debug</IntermediateOutputPath>
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType/>
+    <!-- Enable PDB generation for Debug builds so SourceLink/embed switches are supported -->
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants/>
     <NoWarn/>

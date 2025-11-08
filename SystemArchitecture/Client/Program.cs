@@ -145,7 +145,7 @@ namespace CDTS_PROJECT
                 
                 List<List<Ciphertext>> encryptedFeatureValues = Logics.EncryptedMLHelper.encryptValues(featureList, publicKey, contextManager.Context);
 
-                client.BaseAddress = new Uri("https://mle.isot.ca/");
+                client.BaseAddress = new Uri("https://localhost:5001/");
                 client.DefaultRequestHeaders.Accept.Clear();
             
 
