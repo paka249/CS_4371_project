@@ -86,25 +86,51 @@ namespace CDTS_PROJECT.Logics
 
         static public List<List<Ciphertext>> encryptValues(List<List<float>> featureList,  PublicKey pk, SEALContext context)
         {
-
-            IntegerEncoder encoder = new IntegerEncoder(context);
             Encryptor encryptor = new Encryptor(context, pk);
-
             List<List<Ciphertext>> cList = new List<List<Ciphertext>>();
-            foreach (List<float> row in featureList)
+            
+            // Detect encryption scheme
+            SchemeType scheme = context.FirstContextData.Parms.Scheme;
+            
+            if (scheme == SchemeType.CKKS)
             {
-                 List<Ciphertext> cRow = new List<Ciphertext>();
-                for (int i = 0; i < row.Count; i++)
+                // CKKS: Use CKKSEncoder with scale
+                CKKSEncoder encoder = new CKKSEncoder(context);
+                double scale = Math.Pow(2.0, 30);
+                
+                foreach (List<float> row in featureList)
                 {
-                    long featureItem = (long)(row[i] * 1000);
-                    Plaintext fPlain = encoder.Encode(featureItem);
-                    Ciphertext fCipher = new Ciphertext();
-
-                    encryptor.Encrypt(fPlain, fCipher);
-
-                    cRow.Add(fCipher);
+                    List<Ciphertext> cRow = new List<Ciphertext>();
+                    for (int i = 0; i < row.Count; i++)
+                    {
+                        double featureItem = row[i] * 1000.0;
+                        Plaintext fPlain = new Plaintext();
+                        encoder.Encode(featureItem, scale, fPlain);
+                        Ciphertext fCipher = new Ciphertext();
+                        encryptor.Encrypt(fPlain, fCipher);
+                        cRow.Add(fCipher);
+                    }
+                    cList.Add(cRow);
                 }
-                cList.Add(cRow);
+            }
+            else // BFV
+            {
+                // BFV: Use IntegerEncoder
+                IntegerEncoder encoder = new IntegerEncoder(context);
+                
+                foreach (List<float> row in featureList)
+                {
+                    List<Ciphertext> cRow = new List<Ciphertext>();
+                    for (int i = 0; i < row.Count; i++)
+                    {
+                        long featureItem = (long)(row[i] * 1000);
+                        Plaintext fPlain = encoder.Encode(featureItem);
+                        Ciphertext fCipher = new Ciphertext();
+                        encryptor.Encrypt(fPlain, fCipher);
+                        cRow.Add(fCipher);
+                    }
+                    cList.Add(cRow);
+                }
             }
 
             return cList;
@@ -112,30 +138,62 @@ namespace CDTS_PROJECT.Logics
 
         static public List<List<long>> decryptValues(List<List<Ciphertext>> weihtedSums,  SecretKey sk, SEALContext context)
         {
-
-             List<List<long>> results = new List<List<long>>();
-
+            List<List<long>> results = new List<List<long>>();
             Decryptor decryptor = new Decryptor(context, sk);
-            IntegerEncoder encoder = new IntegerEncoder(context);
+            
+            // Detect encryption scheme
+            SchemeType scheme = context.FirstContextData.Parms.Scheme;
 
             int sample_ind = 0;
-            foreach (List<Ciphertext> sample in weihtedSums)
+            
+            if (scheme == SchemeType.CKKS)
             {
-                List<long> resultsRow = new List<long>();
-                foreach (Ciphertext encryptedClassScore in sample)
+                // CKKS: Use CKKSEncoder to decode doubles
+                CKKSEncoder encoder = new CKKSEncoder(context);
+                
+                foreach (List<Ciphertext> sample in weihtedSums)
                 {
-                    Plaintext plainClassScore = new Plaintext();
-
-                    if (decryptor.InvariantNoiseBudget(encryptedClassScore) == 0){
-                        throw new Exception("Noise budget depleated in sample "+sample_ind+". Aborting...");
+                    List<long> resultsRow = new List<long>();
+                    foreach (Ciphertext encryptedClassScore in sample)
+                    {
+                        Plaintext plainClassScore = new Plaintext();
+                        decryptor.Decrypt(encryptedClassScore, plainClassScore);
+                        
+                        List<double> decoded = new List<double>();
+                        encoder.Decode(plainClassScore, decoded);
+                        // CKKS: divide by 1000 (feature scale) only, not 1000*1000
+                        // The precision multiplication already happened on server
+                        long ClassScore = (long)Math.Round(decoded[0] / 1000.0);
+                        
+                        resultsRow.Add(ClassScore);
                     }
-                    decryptor.Decrypt(encryptedClassScore, plainClassScore);
-                    long ClassScore = encoder.DecodeInt64(plainClassScore)/(1000*1000);
-                    
-                    resultsRow.Add(ClassScore);
+                    results.Add(resultsRow);
+                    sample_ind++;
                 }
-                results.Add(resultsRow);
-                sample_ind++;
+            }
+            else // BFV
+            {
+                // BFV: Use IntegerEncoder
+                IntegerEncoder encoder = new IntegerEncoder(context);
+                
+                foreach (List<Ciphertext> sample in weihtedSums)
+                {
+                    List<long> resultsRow = new List<long>();
+                    foreach (Ciphertext encryptedClassScore in sample)
+                    {
+                        Plaintext plainClassScore = new Plaintext();
+
+                        if (decryptor.InvariantNoiseBudget(encryptedClassScore) == 0){
+                            throw new Exception("Noise budget depleated in sample "+sample_ind+". Aborting...");
+                        }
+                        decryptor.Decrypt(encryptedClassScore, plainClassScore);
+                        long ClassScore = encoder.DecodeInt64(plainClassScore)/(1000*1000);
+                        
+                        resultsRow.Add(ClassScore);
+                    }
+                    results.Add(resultsRow);
+                    sample_ind++;
+                }
             }
 
             return results;

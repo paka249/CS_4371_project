@@ -51,10 +51,9 @@ namespace CDTS_PROJECT.Services
             List<double[]> weights = selectedModel.Weights;
             int N_features = selectedModel.N_weights;
 
-            //initialize integer encoder, encryptor, and evaluator
-            IntegerEncoder encoder = new IntegerEncoder(_contextManager.Context); 
-            //Encryptor encryptor = new Encryptor(_contextManager.Context, publicKey);
+            //initialize evaluator and detect scheme
             Evaluator evaluator = new Evaluator(_contextManager.Context);
+            SchemeType scheme = _contextManager.Context.FirstContextData.Parms.Scheme;
 
             List<List<Ciphertext>> weightedSums = new List<List<Ciphertext>>(); //holds encrypted weighted sums for all classes for all samples
             
@@ -70,35 +69,80 @@ namespace CDTS_PROJECT.Services
 
                 List<Ciphertext> sampleWeightedSums = new List<Ciphertext>();  //holds encrypted weighted sums for all classes for this sample
                 
-                foreach(double[] classWeights in weights){ //for each class 
-
-                    //for each sample, calculate the encrypted weighted feature value and store it in weightedFeatures
-                    List<Ciphertext> weightedFeatures = new List<Ciphertext>();
-                    for (int i = 0; i < sample.Count; i++){ 
-                        
-                        Ciphertext curFeature = sample[i];
-                        long curWeight = (long)(classWeights[i] * precision);
-                        
-                        if (curWeight == 0){
-                            continue;
-                        }
-                        
-                        Plaintext scaledWeight = encoder.Encode(curWeight);
-                        Ciphertext weightedFeature = new Ciphertext();
-                        
-                        evaluator.MultiplyPlain(curFeature, scaledWeight, weightedFeature);
-                        
-                        weightedFeatures.Add(weightedFeature);
-                    }
-
-                    //calculate encrypted weighted sum and append it to sampleWeightedSums
-                    Ciphertext weightedSum = new Ciphertext();
-                    evaluator.AddMany(weightedFeatures, weightedSum);
-                    sampleWeightedSums.Add(weightedSum);
+                if (scheme == SchemeType.CKKS)
+                {
+                    // CKKS: Use CKKSEncoder with scale
+                    CKKSEncoder encoder = new CKKSEncoder(_contextManager.Context);
+                    double scale = Math.Pow(2.0, 30);
                     
-                    //deallocate variables
-                    weightedFeatures = null;
-                    GC.Collect();
+                    foreach(double[] classWeights in weights){ //for each class 
+
+                        //for each sample, calculate the encrypted weighted feature value and store it in weightedFeatures
+                        List<Ciphertext> weightedFeatures = new List<Ciphertext>();
+                        for (int i = 0; i < sample.Count; i++){ 
+                            
+                            Ciphertext curFeature = sample[i];
+                            double curWeight = classWeights[i] * precision;
+                            
+                            if (curWeight == 0){
+                                continue;
+                            }
+                            
+                            Plaintext scaledWeight = new Plaintext();
+                            // Encode weight - use the ciphertext's scale
+                            encoder.Encode(curWeight, curFeature.Scale, scaledWeight);
+                            Ciphertext weightedFeature = new Ciphertext();
+                            
+                            evaluator.MultiplyPlain(curFeature, scaledWeight, weightedFeature);
+                            
+                            weightedFeatures.Add(weightedFeature);
+                        }
+
+                        //calculate encrypted weighted sum and append it to sampleWeightedSums
+                        Ciphertext weightedSum = new Ciphertext();
+                        evaluator.AddMany(weightedFeatures, weightedSum);
+                        sampleWeightedSums.Add(weightedSum);
+                        
+                        //deallocate variables
+                        weightedFeatures = null;
+                        GC.Collect();
+                    }
+                }
+                else // BFV
+                {
+                    // BFV: Use IntegerEncoder
+                    IntegerEncoder encoder = new IntegerEncoder(_contextManager.Context);
+                    
+                    foreach(double[] classWeights in weights){ //for each class 
+
+                        //for each sample, calculate the encrypted weighted feature value and store it in weightedFeatures
+                        List<Ciphertext> weightedFeatures = new List<Ciphertext>();
+                        for (int i = 0; i < sample.Count; i++){ 
+                            
+                            Ciphertext curFeature = sample[i];
+                            long curWeight = (long)(classWeights[i] * precision);
+                            
+                            if (curWeight == 0){
+                                continue;
+                            }
+                            
+                            Plaintext scaledWeight = encoder.Encode(curWeight);
+                            Ciphertext weightedFeature = new Ciphertext();
+                            
+                            evaluator.MultiplyPlain(curFeature, scaledWeight, weightedFeature);
+                            
+                            weightedFeatures.Add(weightedFeature);
+                        }
+
+                        //calculate encrypted weighted sum and append it to sampleWeightedSums
+                        Ciphertext weightedSum = new Ciphertext();
+                        evaluator.AddMany(weightedFeatures, weightedSum);
+                        sampleWeightedSums.Add(weightedSum);
+                        
+                        //deallocate variables
+                        weightedFeatures = null;
+                        GC.Collect();
+                    }
                 }
 
                 weightedSums.Add(sampleWeightedSums);
