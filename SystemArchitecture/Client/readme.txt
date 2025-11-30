@@ -1,5 +1,26 @@
-The expected output in Results.csv when running the client application with testReal2.csv as input is:
+The expected output for test data using HE schemes
+
+Using BFV:
+
+ 	testReal2.csv:
 	0,7,1,-1,0,-1,-1,-3,-3,0,0,-1,-4,3,3,0,-1,1,0,0,2,0
 
-Likewise for testReal1.csv:
+	testReal1.csv:
 	0,4,0,0,4,2,-2,0,0,0,-3,0,-3,2,2,0,0,-2,-1,0,0,-1
+
+	testReal3.csv:
+	231,16,153,358,218,120,-19,-26,266,110,189,-64,23,111,-70,-45,19,-123,71,133,-3,66
+
+Using CKKS:
+
+	testReal1.csv:
+	0,-2,1,1,0,0,1,-1,1,0,1,2,0,-1,-1,1,-1,1,0,-2,1,1
+
+	testReal2.csv:
+	2,0,-1,1,-1,0,0,2,-2,-1,-2,2,1,-1,2,-1,-1,-1,-1,0,2,0
+
+	testReal3.csv:
+	2,1,-1,-1,-2,1,-2,0,0,-2,2,0,-1,1,-1,2,-1,2,0,-2,1,-1
+
+
+

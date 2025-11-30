@@ -27,6 +27,7 @@ namespace CDTS_PROJECT.Services
 		*/
 		
 		 //CKKS (floating-point arithmetic )
+		 
 		 EncryptionParams = new EncryptionParameters(SchemeType.CKKS);
 		 const ulong polyModulusDegree = 4096;
 		 EncryptionParams.PolyModulusDegree = polyModulusDegree;

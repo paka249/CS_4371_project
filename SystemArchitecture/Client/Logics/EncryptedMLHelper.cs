@@ -161,9 +161,9 @@ namespace CDTS_PROJECT.Logics
                         
                         List<double> decoded = new List<double>();
                         encoder.Decode(plainClassScore, decoded);
-                        // CKKS: divide by 1000 (feature scale) only, not 1000*1000
-                        // The precision multiplication already happened on server
-                        long ClassScore = (long)Math.Round(decoded[0] / 1000.0);
+                        // CKKS: divide by 1000 (feature scale) 
+                        
+                        long ClassScore = (long)Math.Round(decoded[0] / (1000.0 * 1000.0));
                         
                         resultsRow.Add(ClassScore);
                     }

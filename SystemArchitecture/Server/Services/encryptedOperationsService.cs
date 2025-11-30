@@ -110,7 +110,7 @@ namespace CDTS_PROJECT.Services
                 }
                 else // BFV
                 {
-                    // BFV: Use IntegerEncoder
+                    // IntegerEncoder
                     IntegerEncoder encoder = new IntegerEncoder(_contextManager.Context);
                     
                     foreach(double[] classWeights in weights){ //for each class 
@@ -150,7 +150,7 @@ namespace CDTS_PROJECT.Services
                 sampleIndex ++;
             }
 
-            return weightedSums; //replace with return weighted sums
+            return weightedSums; 
         }
 
     }
