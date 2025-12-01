@@ -163,7 +163,7 @@ namespace CDTS_PROJECT.Logics
                         encoder.Decode(plainClassScore, decoded);
                         // CKKS: divide by 1000 (feature scale) 
                         
-                        long ClassScore = (long)Math.Round(decoded[0] / (1000.0 * 1000.0));
+                        long ClassScore = (long)Math.Round(decoded[0] / (1000.0 ));
                         
                         resultsRow.Add(ClassScore);
                     }

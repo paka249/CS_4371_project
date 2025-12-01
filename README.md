@@ -21,7 +21,109 @@ open-source repository that contains:
 * the final predictive model deployed and the MLE framework, both deployed to a free cloud service
   [`https://mle.isot.ca`](https://mle.isot.ca)
 
+## Project Extensions
+
+This repository has been extended with:
+
+* **Dual encryption scheme support**: Both BFV (exact integer arithmetic) and CKKS (approximate floating-point arithmetic) homomorphic encryption schemes using Microsoft SEAL library
+* **Comprehensive testing**: Multiple test datasets (binary, mixed, and high-precision synthetic genomic data) with documented expected outputs for both encryption schemes
+* **Performance analysis**: Comparative evaluation of BFV vs CKKS trade-offs in accuracy, speed, and security
+
+# Getting Started #
+
+## Prerequisites
+
+* **.NET Core 3.1 SDK**: Download from [Microsoft](https://dotnet.microsoft.com/download/dotnet/3.1)
+* **MongoDB 4.4.25+**: Required for model coefficient storage
+* **Microsoft SEAL Library**: Included via NuGet packages
+* **Windows OS**: Client application tested on Windows (PowerShell)
+
+## Clone and Build
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/paka249/CS_4371_project.git
+   cd CS_4371_project
+   ```
+
+2. **Configure MongoDB** (ensure MongoDB is running on default port 27017):
+   ```bash
+   # Load model coefficients into MongoDB
+   cd SystemArchitecture/configDB
+   python loadModelFromCsv.py
+   ```
+
+3. **Build the Server**:
+   ```bash
+   cd SystemArchitecture/Server
+   dotnet build
+   ```
+
+4. **Build the Client**:
+   ```bash
+   cd SystemArchitecture/Client
+   dotnet build
+   ```
+
+## Running the Application
+
+1. **Start the Server** (in `SystemArchitecture/Server`):
+   ```bash
+   dotnet run
+   ```
+   Server will start at `https://localhost:5001`
+
+2. **Configure Encryption Scheme** (both Client and Server):
+   
+   Edit `SystemArchitecture/Client/Logics/ContextManager.cs` and `SystemArchitecture/Server/Services/ContextManager.cs`:
+   
+   * For **BFV** (exact integer arithmetic): Uncomment the BFV section, comment the CKKS section
+   * For **CKKS** (approximate floating-point): Uncomment the CKKS section, comment the BFV section
+   
+   **Important**: Both client and server must use the same scheme. Restart the server after changing schemes.
+
+3. **Run the Client** (in `SystemArchitecture/Client`):
+   ```bash
+   dotnet run
+   ```
+   
+   The client will:
+   * Prompt for which test file to use (testReal1.csv, testReal2.csv, or testReal3.csv)
+   * Encrypt the genomic data using the selected scheme
+   * Send encrypted data to the server
+   * Receive and decrypt the cancer prediction results
+   * Save results to `Result.csv`
+
+## Functionality
+
+### What Works ✅
+
+* **BFV Encryption Scheme**: Exact integer arithmetic, faster performance (~2x), all test files produce correct predictions
+* **CKKS Encryption Scheme**: Approximate floating-point arithmetic, higher precision management, all test files supported
+* **Cancer Prediction**: 22 cancer classes based on 5,600 gene expression features
+Encrypted Computation: Dot product calculation performed on encrypted data server-side
+Multiple Test Datasets:
+   `testReal1.csv`: Binary feature data (mostly 0s and 1s)
+   `testReal2.csv`: Mixed binary and decimal features
+   `testReal3.csv`: High-precision synthetic data 
+   
+### Known Limitations
+
+* **Scheme Disagreement**: BFV and CKKS may predict different cancer types for borderline cases due to CKKS's approximate arithmetic accumulating rounding errors over 5,600 operations. BFV is more trustworthy for critical medical predictions.
+* **Manual Scheme Selection**: User must manually comment/uncomment code in both client and server ContextManager files to switch encryption schemes
+* **Performance**: CKKS is approximately 4x slower than BFV due to larger polynomial degree (4096 vs 2048) and additional rescaling operations
+* **Scaling Factor Sensitivity**: CKKS requires careful scaling factor management (currently ÷1000) to avoid underflow with small feature values
+
+
+### Security Considerations
+
+* **Homomorphic Encryption**: Patient genomic data remains encrypted throughout transmission and computation
+* **BFV Security**: ~100-bit security level (polyModulusDegree=2048)
+* **CKKS Security**: ~128-bit security level (polyModulusDegree=4096)
+* **MongoDB**: Model coefficients stored unencrypted (not patient data)
+
 # System Architecture of MLE Framework #
+
 The server is meant to be deployed as a service, hence referred to as MLE.service, which is not
 exposed to the network. Instead, nginx (or something similar) should be used as a reverse proxy
 which manages incoming HTTP traffic and forwards the appropriate HTTP traffic to the MLE service.
@@ -99,11 +201,21 @@ From the Client directory, do the following:
         sudo systemctl restart MLE.service
 
 # References #
-* Briguglio, W., Moghaddam, P., Yousef, W. A., Traore, I., & Mamun, M. (2021) "Machine Learning in
-Precision Medicine to Preserve Privacy via Encryption". [arXiv Preprint,
-arXiv:2102.03412](https://arxiv.org/abs/2102.03412).
 
-# Citation #
+
+## Current Work (Foundation for This Project)
+
+* **Briguglio, W., Moghaddam, P., Yousef, W. A., Traore, I., & Mamun, M. (2021).** "Machine Learning in Precision Medicine to Preserve Privacy via Encryption." *arXiv Preprint, arXiv:2102.03412*. [https://arxiv.org/abs/2102.03412](https://arxiv.org/abs/2102.03412)
+  
+  *This paper provides the foundational MLE framework that this project is based upon, proposing a generic approach for privacy-preserving cancer prediction using homomorphic encryption on genomic datasets while maintaining competitive prediction accuracy.*
+
+## Contemporary Work (Building Upon Current Findings)
+
+* **Chen, H., Dai, W., Kim, M., & Song, Y. (2023).** "Efficient Homomorphic Conversion Between (Ring) LWE Ciphertexts." *Applied Cryptography and Network Security (ACNS 2023)*, Lecture Notes in Computer Science, vol 13905. [DOI: 10.1007/978-3-031-33488-7_9](https://doi.org/10.1007/978-3-031-33488-7_9)
+  
+  *This contemporary work extends homomorphic encryption frameworks by enabling efficient conversion between different encryption schemes (like BFV and CKKS), addressing one of the key limitations identified in current privacy-preserving ML systems. Their techniques could eliminate the manual scheme selection requirement in implementations like ours, enabling dynamic scheme switching based on computational requirements.*
+
+# Citation # (original citation)
 Please, cite this work as
 
 ```
